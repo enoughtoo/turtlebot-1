@@ -17,13 +17,68 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import rospy
 import yaml
+
+import sys
+import pycurl
+import urllib
+import json
+from io import BytesIO
+
 from take_photo import TakePhoto
 from go_to_specific_point_on_map import GoToPose
+
+url = 'http://127.0.0.1:8088/photo'
+
+
+session = 1
+rackid = 1
+count = 1
+
+def dumpclean(obj):
+    if type(obj) == dict:
+        for k, v in obj.items():
+            if hasattr(v, '__iter__'):
+                print k
+                dumpclean(v)
+            else:
+                print '%s : %s' % (k, v)
+    elif type(obj) == list:
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dumpclean(v)
+            else:
+                print v
+    else:
+        print obj
+        
+def take_goods_photo(ses,rac,cnt):
+
+    params = {'session': 1, 'rackid': 1, 'count': 1}
+    data = BytesIO()
+
+    c = pycurl.Curl()
+
+    params["session"] = ses
+    params["rackid"] = rac
+    params["count"] = cnt
+
+    c.setopt( pycurl.URL, url + '?' + urllib.urlencode(params) )
+    c.setopt(pycurl.HTTPGET, True)
+    c.setopt( pycurl.WRITEFUNCTION, data.write )
+ 
+    c.perform()
+    c.close()
+
+    dictionary = json.loads(data.getvalue())
+
+    dumpclean(dictionary)
+
+    return dictionary["status"]
 
 if __name__ == '__main__':
 
     # Read information from yaml file
-    with open("route.yaml", 'r') as stream:
+    with open("/home/robot/git/turtlebot_actions/turtlebot/route.yaml", 'r') as stream:
         dataMap = yaml.load(stream)
 
     try:
@@ -42,16 +97,25 @@ if __name__ == '__main__':
             # Navigation
             rospy.loginfo("Go to %s pose", name[:-4])
             success = navigator.goto(obj['position'], obj['quaternion'])
+            
             if not success:
                 rospy.loginfo("Failed to reach %s pose", name[:-4])
                 continue
             rospy.loginfo("Reached %s pose", name[:-4])
 
-            # Take a photo
+            # Take a photo from kinnect
             if camera.take_picture(name):
                 rospy.loginfo("Saved image " + name)
             else:
                 rospy.loginfo("No images received")
+            
+            session = obj['session']
+            rackid = obj['rackid']
+            count = obj['count']
+            
+            # Take photo from cameras
+            if take_goods_photo(session, rackid, count) == 'ok':
+                print 'all right'
 
             rospy.sleep(1)
 

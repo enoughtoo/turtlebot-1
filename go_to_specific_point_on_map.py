@@ -54,7 +54,7 @@ class GoToPose():
         self.move_base.send_goal(goal)
 
 	# Allow TurtleBot up to 60 seconds to complete task
-	success = self.move_base.wait_for_result(rospy.Duration(60)) 
+	success = self.move_base.wait_for_result(rospy.Duration(180)) 
 
         state = self.move_base.get_state()
         result = False
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         navigator = GoToPose()
 
         # Customize the following values so they are appropriate for your location
-        position = {'x': 1.22, 'y' : 2.56}
+        position = {'x': 5.0, 'y' : -1.0}
         quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
 
         rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
