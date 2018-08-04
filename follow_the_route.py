@@ -1,79 +1,16 @@
 #!/usr/bin/env python
 
-'''
-Copyright (c) 2016, Nadya Ampilogova
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
-
 import rospy
 import yaml
 
 import sys
-import pycurl
-import urllib
-import json
-from io import BytesIO
 
 from take_photo import TakePhoto
 from go_to_specific_point_on_map import GoToPose
 
-url = 'http://127.0.0.1:8088/photo'
-
-
-session = 1
-rackid = 1
-count = 1
-
-def dumpclean(obj):
-    if type(obj) == dict:
-        for k, v in obj.items():
-            if hasattr(v, '__iter__'):
-                print k
-                dumpclean(v)
-            else:
-                print '%s : %s' % (k, v)
-    elif type(obj) == list:
-        for v in obj:
-            if hasattr(v, '__iter__'):
-                dumpclean(v)
-            else:
-                print v
-    else:
-        print obj
-        
-def take_goods_photo(ses,rac,cnt):
-
-    params = {'session': 1, 'rackid': 1, 'count': 1}
-    data = BytesIO()
-
-    c = pycurl.Curl()
-
-    params["session"] = ses
-    params["rackid"] = rac
-    params["count"] = cnt
-
-    c.setopt( pycurl.URL, url + '?' + urllib.urlencode(params) )
-    c.setopt(pycurl.HTTPGET, True)
-    c.setopt( pycurl.WRITEFUNCTION, data.write )
- 
-    c.perform()
-    c.close()
-
-    dictionary = json.loads(data.getvalue())
-
-    dumpclean(dictionary)
-
-    return dictionary["status"]
+from std_msgs.msg import Bool
+from std_msgs.msg import UInt32
+from std_msgs.msg import String
 
 if __name__ == '__main__':
 
@@ -82,8 +19,17 @@ if __name__ == '__main__':
         dataMap = yaml.load(stream)
 
     try:
-        # Initialize
         rospy.init_node('follow_route', anonymous=False)
+        
+        start_session_pub = rospy.Publisher('photo/start_session', Bool, queue_size=10)
+        session_state_msg = Bool()
+        
+        session_num_pub = rospy.Publisher('photo/session_num', UInt32, queue_size=10)
+        session_num_msg = UInt32()
+        
+        rack_id_pub = rospy.Publisher('photo/rack_id', UInt32, queue_size=10)
+        rack_id_msg = UInt32()
+
         navigator = GoToPose()
         camera = TakePhoto()
 
@@ -93,14 +39,23 @@ if __name__ == '__main__':
                 break
 
             name = obj['filename']
+            
+            session_num_msg = obj['session']
+            rack_id_msg = obj['rackid']
+            session_state_msg = True
 
-            # Navigation
-            rospy.loginfo("Go to %s pose", name[:-4])
+            rospy.loginfo("Go to %s pose of rack %s", name[:-4], rack_id_msg)
+
+            start_session_pub.publish(session_state_msg)
+            session_num_pub.publish(session_num_msg)
+            rack_id_pub.publish(rack_id_msg)
+
             success = navigator.goto(obj['position'], obj['quaternion'])
             
             if not success:
                 rospy.loginfo("Failed to reach %s pose", name[:-4])
                 continue
+
             rospy.loginfo("Reached %s pose", name[:-4])
 
             # Take a photo from kinnect
@@ -108,15 +63,10 @@ if __name__ == '__main__':
                 rospy.loginfo("Saved image " + name)
             else:
                 rospy.loginfo("No images received")
+                
+            session_state_msg = False
+            start_session_pub.publish(session_state_msg)
             
-            session = obj['session']
-            rackid = obj['rackid']
-            count = obj['count']
-            
-            # Take photo from cameras
-            if take_goods_photo(session, rackid, count) == 'ok':
-                print 'all right'
-
             rospy.sleep(1)
 
     except rospy.ROSInterruptException:
