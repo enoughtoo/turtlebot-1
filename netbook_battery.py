@@ -25,24 +25,30 @@ from sensor_msgs.msg import BatteryState #for netbook battery
 class netbook_battery():
 
 	def __init__(self):
-		rospy.init_node("netbook_battery")		
+		pass
+		# #monitor netbook's battery status.  Everytime anything changes call the call back function self.NetbookPowerEventCallback and pass the data regarding the current battery status
+		# rospy.Subscriber("/laptop_charge/", BatteryState, self.NetbookPowerEventCallback)
+		#
+		# #rospy.spin() tells the program to not exit until you press ctrl + c.  If this wasn't there... it'd subscribe to /laptop_charge/ then immediatly exit (therefore stop "listening" to the thread).
+		# rospy.spin()
 
-		#monitor netbook's battery status.  Everytime anything changes call the call back function self.NetbookPowerEventCallback and pass the data regarding the current battery status
-		rospy.Subscriber("/laptop_charge/",BatteryState,self.NetbookPowerEventCallback)
-
-		#rospy.spin() tells the program to not exit until you press ctrl + c.  If this wasn't there... it'd subscribe to /laptop_charge/ then immediatly exit (therefore stop "listening" to the thread).
-		rospy.spin();
-
-
-	def NetbookPowerEventCallback(self,data):
-		print("Percent: " + str(data.percentage)) 
-		print("Charge: " + str(data.charge))
-		if(int(data.power_supply_status) == 1):
-			print("Currently charging")
-		else:
-			print("Not charging")
-		print("-----")
+	# def NetbookPowerEventCallback(self,data):
+		# print("Percent: " + str(data.percentage))
+		# print("Charge: " + str(data.charge))
+		# if(int(data.power_supply_status) == 1):
+		# 	print("Currently charging")
+		# else:
+		# 	print("Not charging")
+		# print("-----")
 		#Tip: try print(data) for a complete list of information available in the /laptop_charge/ thread
+
+	def getLaptopInfo(self):
+		percentage = -1
+		charging = False
+		data = rospy.wait_for_message('/laptop_charge/', BatteryState, 5)
+		percentage = data.percentage
+		charging = (data.charge == 1)
+		return percentage, charging
 
 if __name__ == '__main__':
 	try:
