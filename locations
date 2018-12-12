@@ -1,0 +1,27 @@
+charger
+
+- Translation: [-0.103, -0.0, 0.300]
+- Rotation: in Quaternion [0.000, 0.000, -0.051, 0.999]
+            in RPY (radian) [0.000, 0.000, -0.101]
+            in RPY (degree) [0.000, 0.000, -5.799]
+
+center room
+
+- Translation: [-1.8, 0.0, 0.300]
+- Rotation: in Quaternion [0.000, 0.000, -0.053, 0.999]
+            in RPY (radian) [0.000, 0.000, -0.106]
+            in RPY (degree) [0.000, 0.000, -6.089]
+
+radiator room
+
+- Translation: [-2.903, 0.220, 0.300]
+- Rotation: in Quaternion [0.000, 0.000, 0.010, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.019]
+            in RPY (degree) [0.000, -0.000, 1.109]
+
+ball chair
+
+- Translation: [2.928, 2.581, 0.300]
+- Rotation: in Quaternion [0.000, 0.000, 0.205, 0.979]
+            in RPY (radian) [0.000, -0.000, 0.413]
+            in RPY (degree) [0.000, -0.000, 23.680]
