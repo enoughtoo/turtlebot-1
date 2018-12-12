@@ -27,7 +27,7 @@
   <arg name="args"              default=""/>
   <arg name="rtabmapviz"        default="false"/>
   
-  <arg name="wait_for_transform"  default="0.2"/> 
+  <arg name="wait_for_transform"  default="0.5"/>
   <!-- 
       robot_state_publisher's publishing frequency in "turtlebot_bringup/launch/includes/robot.launch.xml" 
       can be increase from 5 to 10 Hz to avoid some TF warnings.
@@ -50,7 +50,7 @@
     <node pkg="nodelet" type="nodelet" name="depthimage_to_laserscan" args="standalone depthimage_to_laserscan/DepthImageToLaserScanNodelet">
       <!-- Pixel rows to use to generate the laserscan. For each column, the scan will
            return the minimum value for those pixels centered vertically in the image. -->
-      <param name="scan_height" value="10"/>
+      <param name="scan_height" value="30"/>
       <param name="output_frame_id" value="/camera_depth_frame"/>
       <param name="range_min" value="0.45"/>
       <remap from="image" to="/camera/depth/image_raw"/>
@@ -96,9 +96,10 @@
 	  <param name="RGBD/LinearUpdate"            type="string" value="0.1"/>    <!-- Update map only if the robot is moving -->
 	  <param name="Rtabmap/TimeThr"              type="string" value="700"/>
 	  <param name="Mem/RehearsalSimilarity"      type="string" value="0.30"/>
-	  <param name="Optimizer/Slam2D"             type="string" value="true"/>
-	  <param name="Reg/Force3DoF"                type="string" value="true"/>   
-	  
+	  <param name="Reg/Force3DoF"                type="string" value="true"/>
+	  <param name="Grid/FromDepth"               type="string" value="false"/>
+      <param name="RGBD/ProximityPathMaxNeighbors" type="string" value="10"/>
+
 	  <!-- localization mode -->
 	  <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
 	  <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
@@ -129,6 +130,9 @@
       <remap from="rgb/camera_info" to="/camera/rgb/camera_info"/>
       <remap from="scan"            to="/scan"/>
     </node>
+
+        <!-- ******* Visualization of the Turtlebot on Rviz ******* -->
+  <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz"/-->
     
   </group>
 </launch>
