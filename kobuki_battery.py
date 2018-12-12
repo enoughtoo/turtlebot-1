@@ -24,7 +24,7 @@ from kobuki_msgs.msg import SensorState
 
 class kobuki_battery():
 
-	kobuki_base_max_charge = 100
+	kobuki_base_max_charge = 160
 
 	def __init__(self):
 		pass
